@@ -73,7 +73,7 @@ func (d *Device) getT(reg byte) (float64, error) {
 		return 0, err
 	}
 
-	v := (uint16(value[0])<<8 | uint16(value[1])>>8)
+	v := (uint16(value[0])<<2 | uint16(value[1])>>6)
 
 	return float64(v)*0.02 - 273.15, nil
 }
