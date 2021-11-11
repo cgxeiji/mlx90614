@@ -11,7 +11,8 @@ type Device struct {
 	i2c *serial.I2C
 }
 
-// New returns a new MLX90614 device.
+// New returns a new MLX90614 device. Pass busName="" and addr=0 to use the
+// default values.
 func New(busName string, addr uint16) (*Device, error) {
 	if addr == 0 {
 		addr = Addr
@@ -38,7 +39,7 @@ func (d *Device) Close() {
 }
 
 // TAmbient returns the ambient temperature detected by the sensor.
-func (d *Device) TAmbient() (float64, error) {
+func (d *Device) TAmbient() (Temperature, error) {
 	v, err := d.getT(Tamb)
 	if err != nil {
 		return 0, fmt.Errorf("mlx90614: could not read ambient temperature: %w", err)
@@ -48,7 +49,7 @@ func (d *Device) TAmbient() (float64, error) {
 }
 
 // TObject1 returns the temperature of the object 1 detected by the sensor.
-func (d *Device) TObject1() (float64, error) {
+func (d *Device) TObject1() (Temperature, error) {
 	v, err := d.getT(Tobj1)
 	if err != nil {
 		return 0, fmt.Errorf("mlx90614: could not read object 1 temperature: %w", err)
@@ -58,7 +59,7 @@ func (d *Device) TObject1() (float64, error) {
 }
 
 // TObject2 returns the temperature of the object 2 detected by the sensor.
-func (d *Device) TObject2() (float64, error) {
+func (d *Device) TObject2() (Temperature, error) {
 	v, err := d.getT(Tobj2)
 	if err != nil {
 		return 0, fmt.Errorf("mlx90614: could not read object 2 temperature: %w", err)
@@ -67,15 +68,15 @@ func (d *Device) TObject2() (float64, error) {
 	return v, nil
 }
 
-func (d *Device) getT(reg byte) (float64, error) {
+func (d *Device) getT(reg byte) (Temperature, error) {
 	value, err := d.ReadBytes(reg, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	v := (uint16(value[0])<<2 | uint16(value[1])>>6)
+	v := uint16(value[1])<<8 | uint16(value[0])
 
-	return float64(v)*0.02 - 273.15, nil
+	return Temperature(v), nil
 }
 
 // Read reads a single byte from a register.
